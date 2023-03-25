@@ -2,8 +2,18 @@ import Button from "@/components/Button";
 import Head from "next/head";
 import Link from "next/link";
 import { HiOutlineMenu, HiPlay } from "react-icons/hi"
+import VideoPlayer from "@/components/VideoPlayer";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [testUrl, setTestURL] = useState<string>('')
+
+  useEffect(() => {
+    setTimeout(() => {
+      setTestURL('')
+    }, 3000);
+  }, [])
+
   return (
     <div>
       <Head>
@@ -43,9 +53,42 @@ export default function Home() {
             <p className="opacity-80">Test your HLS (M3U8), DASH stream urls with our player</p>
           </div>
           <div className="flex gap-3 items-center justify-center mt-10">
-            <input className="w-full bg-transparent bg-white outline-none border-none text-black p-2 px-3 rounded-md max-w-xl" placeholder="Enter an HLS or DASH url to test player" />
+            <input value={testUrl} onChange={event => setTestURL(event.target.value)} className="w-full bg-transparent bg-white outline-none border-none text-black p-2 px-3 rounded-md max-w-xl" placeholder="Enter an HLS or DASH url to test player" />
             <Button label="Play" />
           </div>
+
+
+
+          {/*  */}
+
+          <div className="w-full lg:max-w-[800px] my-10 mx-auto">
+            <VideoPlayer source={testUrl} />
+          </div>
+
+
+          {/* <div>
+            <div>
+              <video
+                poster="https://wallpaperaccess.com/full/2680068.jpg"
+                src="https://live-par-2-abr.livepush.io/vod/bigbuckbunny/index.m3u8"
+              ></video>
+            </div>
+            <div>
+              <button><MdFullscreen size={30} /></button>
+              <button><BiPause size={30} /></button>
+              <button><MdReplay10 size={30} /></button>
+              <button><MdOutlineForward10 size={30} /></button>
+            </div>
+
+
+            <div className="progress-bar">
+              <input type="range" className="progress-bar__range" min="0" max="100" value="30" />
+              <div className="progress-bar__fill"></div>
+              <div className="progress-bar__thumb"></div>
+            </div>
+
+
+          </div> */}
         </div>
       </section>
     </div>
