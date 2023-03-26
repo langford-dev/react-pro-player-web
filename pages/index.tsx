@@ -5,6 +5,7 @@ import { HiOutlineMenu, HiPlay } from "react-icons/hi"
 import { useState } from "react";
 import ProPlayer from "pro-player";
 import 'pro-player/dist/index.css'
+import Image from "next/image";
 
 export default function Home() {
   const [testUrl, setTestURL] = useState<string>('')
@@ -47,8 +48,11 @@ export default function Home() {
       <section className="py-20">
         <div className="px-5">
           <div className="text-center flex flex-col gap-5 max-w-4xl m-auto">
-            <h1 className="lg:text-5xl text-3xl font-medium">Play HLS & DASH streams with our advanced web video player</h1>
-            <p className="opacity-80">Test your HLS (M3U8), DASH stream urls with our player</p>
+            <Link href='https://www.npmjs.com/package/pro-player' target='_blank' rel="noreferrer">
+              <Image className="m-auto" width='80' height='80' src='https://img.shields.io/npm/v/pro-player.svg' alt="pro player package" />
+            </Link>
+            <h1 className="lg:text-5xl text-3xl font-medium">Play videos & HLS streams with our advanced web video player</h1>
+            <p className="opacity-80">Test your HLS (M3U8) stream, or video url with our player</p>
           </div>
           <div className="flex gap-3 items-center justify-center mt-10 flex-col">
             <input value={testUrl} onChange={event => setTestURL(event.target.value)} className="w-full bg-transparent bg-white outline-none border-none text-black p-2 px-3 rounded-md max-w-xl" placeholder="Video URL to test player" />
