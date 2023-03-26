@@ -2,20 +2,15 @@ import Button from "@/components/Button";
 import Head from "next/head";
 import Link from "next/link";
 import { HiOutlineMenu, HiPlay } from "react-icons/hi"
-import VideoPlayer from "@/components/VideoPlayer";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import ProPlayer from "pro-player";
+import 'pro-player/dist/index.css'
 
 export default function Home() {
   const [testUrl, setTestURL] = useState<string>('')
   const [testPosterURL, setTestPosterURL] = useState<string>('')
   const [isTestStaticVideo, setIsTestStaticVideo] = useState<string>('false')
   const [playVideo, setPlayVideo] = useState<boolean>(false)
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setTestURL('')
-  //   }, 3000);
-  // }, [])
 
   return (
     <div>
@@ -75,7 +70,7 @@ export default function Home() {
           {/* https://c4.wallpaperflare.com/wallpaper/700/984/982/anime-attack-on-titan-armin-arlert-attack-on-titan-blonde-hd-wallpaper-preview.jpg */}
 
           <div className="w-full lg:max-w-[800px] my-10 mx-auto">
-            <VideoPlayer
+            <ProPlayer
               poster={testPosterURL || 'https://wallpaperaccess.com/full/2680068.jpg'}
               isStaticVideo={isTestStaticVideo === 'false' ? false : true}
               showLogs={true}
