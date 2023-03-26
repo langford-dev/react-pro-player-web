@@ -24,7 +24,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <HiPlay className="text-green-400" size={30} />
             <p className="text-green-400 font-bold text-xl">
-              React Pro Player
+              Pro Player
             </p>
           </div>
           <nav className="hidden lg:block">
