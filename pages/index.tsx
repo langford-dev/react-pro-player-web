@@ -7,12 +7,15 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const [testUrl, setTestURL] = useState<string>('')
+  const [testPosterURL, setTestPosterURL] = useState<string>('')
+  const [isTestStaticVideo, setIsTestStaticVideo] = useState<string>('false')
+  const [playVideo, setPlayVideo] = useState<boolean>(false)
 
-  useEffect(() => {
-    setTimeout(() => {
-      setTestURL('')
-    }, 3000);
-  }, [])
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     setTestURL('')
+  //   }, 3000);
+  // }, [])
 
   return (
     <div>
@@ -52,43 +55,33 @@ export default function Home() {
             <h1 className="lg:text-5xl text-3xl font-medium">Play HLS & DASH streams with our advanced web video player</h1>
             <p className="opacity-80">Test your HLS (M3U8), DASH stream urls with our player</p>
           </div>
-          <div className="flex gap-3 items-center justify-center mt-10">
-            <input value={testUrl} onChange={event => setTestURL(event.target.value)} className="w-full bg-transparent bg-white outline-none border-none text-black p-2 px-3 rounded-md max-w-xl" placeholder="Enter an HLS or DASH url to test player" />
-            <Button label="Play" />
+          <div className="flex gap-3 items-center justify-center mt-10 flex-col">
+            <input value={testUrl} onChange={event => setTestURL(event.target.value)} className="w-full bg-transparent bg-white outline-none border-none text-black p-2 px-3 rounded-md max-w-xl" placeholder="Video URL to test player" />
+            <input value={testPosterURL} onChange={event => setTestPosterURL(event.target.value)} className="w-full bg-transparent bg-white outline-none border-none text-black p-2 px-3 rounded-md max-w-xl" placeholder="Poster image url" />
+            {/* <div className="flex items-center gap-3">
+              <label>Play HLS URL</label>
+              <select className="text-black outline-none" onChange={event => {
+                setIsTestStaticVideo(event.target.value)
+              }}>
+                <option value='true'>Yes</option>
+                <option value='false'>No</option>
+              </select>
+            </div> */}
+            {/* <Button label="Play" action={() => setPlayVideo(true)} /> */}
           </div>
 
-
-
-          {/*  */}
+          {/* https://live-par-2-abr.livepush.io/vod/bigbuckbunny/index.m3u8 */}
+          {/* https://wallpaperaccess.com/full/2680068.jpg */}
+          {/* https://c4.wallpaperflare.com/wallpaper/700/984/982/anime-attack-on-titan-armin-arlert-attack-on-titan-blonde-hd-wallpaper-preview.jpg */}
 
           <div className="w-full lg:max-w-[800px] my-10 mx-auto">
-            <VideoPlayer source={testUrl} />
+            <VideoPlayer
+              poster={testPosterURL || 'https://wallpaperaccess.com/full/2680068.jpg'}
+              isStaticVideo={isTestStaticVideo === 'false' ? false : true}
+              showLogs={true}
+              source={testUrl}
+            />
           </div>
-
-
-          {/* <div>
-            <div>
-              <video
-                poster="https://wallpaperaccess.com/full/2680068.jpg"
-                src="https://live-par-2-abr.livepush.io/vod/bigbuckbunny/index.m3u8"
-              ></video>
-            </div>
-            <div>
-              <button><MdFullscreen size={30} /></button>
-              <button><BiPause size={30} /></button>
-              <button><MdReplay10 size={30} /></button>
-              <button><MdOutlineForward10 size={30} /></button>
-            </div>
-
-
-            <div className="progress-bar">
-              <input type="range" className="progress-bar__range" min="0" max="100" value="30" />
-              <div className="progress-bar__fill"></div>
-              <div className="progress-bar__thumb"></div>
-            </div>
-
-
-          </div> */}
         </div>
       </section>
     </div>

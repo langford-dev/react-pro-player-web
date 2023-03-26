@@ -1,13 +1,21 @@
-import { FC, useEffect, useRef, useState } from "react"
+import Hls from "hls.js"
+import { ChangeEvent, FC, useEffect, useRef, useState } from "react"
 import { BiInfoSquare, BiLoader, BiPause, BiPlay } from "react-icons/bi"
 import { MdFullscreen, MdOutlineForward10, MdReplay10 } from "react-icons/md"
 
 interface IPlayer {
-    source: string
+    source: string // url of video
+    poster?: string // video poster
+    showLogs?: boolean // show logs in console
+    isStaticVideo: boolean, // whether or not video source passed is for a static video or HLS/DASH
 }
 
-const VideoPlayer: FC<IPlayer> = ({ source }) => {
-    const videoRef = useRef<HTMLVideoElement>(null)
+interface THTMLVideoElement extends HTMLVideoElement {
+    hls: any
+}
+
+const VideoPlayer: FC<IPlayer> = ({ source, showLogs, isStaticVideo, poster }) => {
+    const videoRef = useRef<THTMLVideoElement>(null)
     const [isPlaying, setIsPlaying] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(true)
     const [showControls, setShowControls] = useState<boolean>(true)
@@ -18,25 +26,95 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
     const [logMessage, setLogMessage] = useState<string>('00:00')
     const [isFullScreen, setIsFullScreen] = useState<boolean>(false)
     const [selectedQuality, setSelectedQuality] = useState<number>(0)
-
-    console.log('source', !!source)
+    const [qualities, setQualities] = useState<number[]>([])
 
     useEffect(() => {
+        onPlayerLoad()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [source, isStaticVideo])
+
+    useEffect(() => {
+        listenForMouseMoveOverVideoElement()
+    }, [])
+
+    useEffect(() => {
+        toggleShowVideoControls()
+    }, [showControls])
+
+    const SUPPORTED_MIME_TYPES = [
+        "application/vnd.apple.mpegurl"
+    ]
+
+    function onPlayerLoad() {
         if (!source) {
-            setLogMessage("video source not provided")
+            setLogMessage('video source not provided')
             return
         } else setLogMessage('')
 
         const video = videoRef.current
 
         if (!video) {
-            console.log("video element not mounted on DOM")
+            showLogMessage("video element not mounted on DOM", 'ERROR')
             return
         }
 
-        console.log('loading metadata...')
+        setLoading(true)
 
-        video.addEventListener('loadedmetadata', (metadata) => {
+        if (isStaticVideo) {
+            listenForVideoPlayerEvents()
+        } else { // set up player for HLS URL
+            if (Hls.isSupported()) {
+                const hls = new Hls()
+
+                showLogMessage("hls supported", 'LOG')
+
+                video.hls = hls
+
+                hls.loadSource(source)
+                hls.attachMedia(video)
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    setQualities(hls.levels.map((level: any) => level.height))
+                    setSelectedQuality(hls.levels.length - 1)
+                    listenForVideoPlayerEvents()
+                })
+            } else if (video.canPlayType(SUPPORTED_MIME_TYPES[0])) {
+                video.src = source
+                listenForVideoPlayerEvents()
+            }
+        }
+    }
+
+    const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
+        const newQuality = parseInt(event.target.value)
+        const video = videoRef.current
+
+        setSelectedQuality(newQuality)
+
+        if (!video) {
+            showLogMessage('video element not mounted on DOM', 'ERROR')
+            return
+        }
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            const hls = video.hls
+
+            if (hls && hls.levels[newQuality]) {
+                hls.currentLevel = newQuality
+            }
+        }
+    }
+
+    function listenForVideoPlayerEvents() {
+        const video = videoRef.current
+
+        if (!video) {
+            showLogMessage("video element not mounted on DOM", 'ERROR')
+            return
+        }
+
+        showLogMessage('loading metadata...', 'LOG')
+
+        video.addEventListener('loadedmetadata', () => {
             setIsPlaying(video.paused)
             setDuration(formatTime(video.duration))
             setDurationInt(video.duration)
@@ -51,21 +129,15 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
         video.addEventListener("ended", () => {
             setIsPlaying(false)
         })
+    }
 
-        // return () => {
-        //     video.removeEventListener("loadedmetadata", () => { })
-        //     video.removeEventListener("timeupdate", () => { })
-        //     video.removeEventListener("ended", () => { })
-        // }
-    }, [source])
-
-    useEffect(() => {
-        listenForMouseMoveOverVideoElement()
-    }, [])
-
-    useEffect(() => {
-        toggleShowVideoControls()
-    }, [showControls])
+    function showLogMessage(logMessage_: string, logType?: string) {
+        if (showLogs === true) {
+            if (logType === "ERROR") console.error(logMessage_)
+            if (logType === "WARN") console.warn(logMessage_)
+            else console.log(logMessage_)
+        }
+    }
 
     function listenForMouseMoveOverVideoElement() {
         const videoPlayerElement = document.querySelector('.playerVideo')
@@ -80,7 +152,7 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
     function toggleShowVideoControls() {
         const timeoutId = setTimeout(() => {
             setShowControls(false)
-        }, 2000)
+        }, 5000)
 
         return () => { clearTimeout(timeoutId) }
     }
@@ -102,7 +174,7 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
         const video = videoRef.current
 
         if (!video) {
-            console.log("video element not mounted on DOM")
+            showLogMessage('video element not mounted on DOM', 'ERROR')
             return
         }
 
@@ -115,7 +187,7 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
         const video = videoRef.current
 
         if (!video) {
-            console.log("video element not mounted on DOM")
+            showLogMessage("video element not mounted on DOM", 'ERROR')
             return
         }
 
@@ -127,6 +199,7 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
         const video = videoRef.current
 
         if (!video) {
+            showLogMessage('video element not mounted on DOM', 'ERROR')
             return
         }
 
@@ -136,10 +209,11 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
     }
 
     const handleProgress = (event: any) => {
-        const video = videoRef.current
         const seekTime = event.target.value
+        const video = videoRef.current
 
         if (!video) {
+            showLogMessage('video element not mounted on DOM', 'ERROR')
             return
         }
 
@@ -156,8 +230,10 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
         <>
             <div className="playerContainer">
                 {logMessage && <div className="playerContainerOverlay">
-                    <div><BiInfoSquare size={30} /></div>
-                    <p>{logMessage}</p>
+                    <div className="playerLogMessageContainerOverlay">
+                        <div><BiInfoSquare size={30} /></div>
+                        <p>{logMessage}</p>
+                    </div>
                 </div>}
 
                 {loading && <div className="playerContainerOverlay">
@@ -165,7 +241,7 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
                 </div>}
 
                 <span>
-                    <video onMouseEnter={onVideoElementHover} ref={videoRef} autoPlay className="playerVideo" src={source}>
+                    <video poster={poster} onMouseEnter={onVideoElementHover} ref={videoRef} autoPlay className="playerVideo" src={source}>
                         Your browser does not support the video tag.
                     </video>
 
@@ -189,12 +265,15 @@ const VideoPlayer: FC<IPlayer> = ({ source }) => {
                             <span className="duration">{duration}</span>
                         </div>
 
-                        <select className="playerQualitySelector">
-                            <option value="240p">240p</option>
-                            <option value="360p">360p</option>
-                            <option value="480p">480p</option>
-                            <option value="720p">720p</option>
-                        </select>
+                        {!isStaticVideo && qualities.length > 0 && (
+                            <select value={selectedQuality} onChange={handleQualityChange} className="playerQualitySelector">
+                                {qualities.map((quality, index) => (
+                                    <option key={index} value={index}>
+                                        {quality}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>}
                 </span>
             </div>
